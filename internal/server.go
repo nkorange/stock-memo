@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nkorange/stock-memo/pkg/stock"
+	"github.com/nkorange/stock-memo/pkg/trade_strategy"
 	"html/template"
 	"io"
 	"net"
@@ -47,6 +48,16 @@ func (s *Server) dashboard(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) analyze(w http.ResponseWriter, req *http.Request) {
 
+	//startMoney, err := strconv.ParseFloat(req.Form.Get("startMoney"), 64)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//startDay, err := strconv.Atoi(req.Form.Get("startDay"))
+	//if err != nil {
+	//	panic(err)
+	//}
+	startMoney := 10000.0
+	startDay := 1
 	err := req.ParseMultipartForm(5 * 1024 * 1024)
 	if err != nil {
 		panic(err)
@@ -57,16 +68,10 @@ func (s *Server) analyze(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	defer file.Close()
-	// Copy the file data to my buffer
 	io.Copy(&buf, file)
-	// do something with the contents...
-	// I normally have a struct defined and unmarshal into a struct, but this will
-	// work as an example
 	contents := buf.String()
-	//fmt.Println(contents)
 	lines := strings.Split(contents, "\n")
-	fmt.Println(len(lines))
-	history := stock.PriceHistory{
+	history := &stock.PriceHistory{
 		Prices: make([]*stock.Price, len(lines)-1),
 	}
 	ind := len(history.Prices) - 1
@@ -86,7 +91,11 @@ func (s *Server) analyze(w http.ResponseWriter, req *http.Request) {
 		history.Prices[ind] = price
 		ind--
 	}
-	writeData(w, history)
+
+	tradeStrategy := trade_strategy.NewPercentageStrategy()
+	profit := tradeStrategy.Trade(history, startMoney, startDay)
+
+	writeData(w, profit)
 }
 
 func writeError(w http.ResponseWriter, statusCode int, err error) {

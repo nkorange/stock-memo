@@ -3,13 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 </head>
 <body>
 <h1>Stock Profit Calculator</h1>
-<form method="post" enctype="multipart/form-data" action="/analyze">
-    <p>Select File:</p>
-    <p><input type="file" name="file"/></p>
-    <p><input type="submit" value="upload"/></p>
+start money: <input type="text" id="start_money"/>
+start day: <input type="text" id="start_day"/>
+<form enctype="multipart/form-data">
+    <p>Upload File<input type="file" id="file" name="file"/></p>
+    <button id="import">upload</button>
 </form>
 </body>
+<script type="text/javascript">
+    $("#import").click(function () {
+        var files = $('#file').prop('files');
+        var data = new FormData();
+        data.append('file', files[0]);
+        let starMoney = $('#start_money').value
+        let startDay = $('#start_day').value
+        console.log(starMoney, startDay)
+        data.append("startDay", startDay)
+        data.append("starMoney", starMoney)
+        $.ajax({
+            type: 'POST',
+            url: "/analyze",
+            data: data,
+            cache: false,
+            processData: false,
+            contentType: false,
+            success: function (ret) {
+                alert(ret);
+            }
+        });
+    });
+</script>
 </html>
